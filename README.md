@@ -20,6 +20,7 @@ Repo rollouts everything in one go due to time restrictions.
     ```
  - Split states of underlying infra and k8s
  - Split states of ec2, lb's, sg's into separate states to have more control over infra
+ - ASG instead of plain EC2
  - pre-commit hooks for tf
  - CI to apply changes by having one source of truth(repo) instead of desktop pc
  - Do not store kubeconfig in any way. Should use `ephemeral` when pass into k8s module
