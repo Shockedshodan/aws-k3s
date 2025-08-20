@@ -1,0 +1,25 @@
+#!/bin/bash
+set -euxo pipefail
+
+yum -y update || dnf -y update
+
+curl -sfL https://get.k3s.io | sh -s - ${mode} \
+%{ for component in disable ~}
+--disable ${component} \
+%{ endfor ~}
+%{ for host in server_hosts ~}
+--server "${host}" \
+%{ endfor ~}
+%{ for alt in alt_names ~}
+--tls-san "${alt}" \
+%{ endfor ~}
+%{ for token in tokens ~}
+--token "${token}" \
+%{ endfor ~}
+%{ for taint in node_taints ~}
+--node-taint "${ taint }" \
+%{ endfor ~}
+%{ if  cluster_init == true ~}
+--cluster-init
+%{ endif ~}
+--log ~/.k3s-install-log.txt
