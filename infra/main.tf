@@ -29,7 +29,7 @@ resource "aws_key_pair" "ssh_key" {
 module "vpc" {
   source = "../modules/vpc"
 
-  vpc_name = "epta-k3ss-vpc"
+  vpc_name = "epta-k3s-vpc"
   vpc_cidr = "10.0.0.0/16"
 
   azs             = ["us-west-2a", "us-west-2b"]
@@ -52,7 +52,7 @@ module "vpc" {
 module "lb" {
   source = "../modules/lb"
 
-  name               = "epta-k3ss-alb"
+  name               = "epta-k3s-alb"
   vpc_id             = module.vpc.vpc_id
   vpc_cidr           = "10.0.0.0/16"
   public_subnet_ids  = module.vpc.public_subnets
@@ -73,7 +73,7 @@ module "ec2" {
 
   vpc_id             = module.vpc.vpc_id
   vpc_cidr           = "10.0.0.0/16"
-  name               = "epta-k3ss-ec2"
+  name               = "epta-k3s-ec2"
   ami_id             = "ami-01102c5e8ab69fb75"
   instance_type      = "t3.small"
   private_subnet_ids = module.vpc.private_subnets

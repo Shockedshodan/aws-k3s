@@ -51,7 +51,7 @@ variable "k8s_tg_arn" {
 variable "admin_cidrs" {
   description = "CIDR blocks for administrative access"
   type        = list(string)
-  default     = ["77.165.233.0/24"]
+  default     = ["192.168.1.0/24"]
 }
 
 variable "vpc_endpoint_subnet_cidrs" {

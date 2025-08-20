@@ -1,4 +1,22 @@
 locals {
+  lb_names = {
+    public   = "${var.name}-alb-public"
+    internal = "${var.name}-alb-internal"
+    nlb_mgmt = "${var.name}-nlb-mgmt"
+  }
+
+
+  lb_sg_names = {
+    public   = "${var.name}-alb-public-sg"
+    internal = "${var.name}-alb-internal-sg"
+    nlb_mgmt = "${var.name}-nlb-sg"
+  }
+
+  subnets = {
+    public  = var.public_subnet_ids
+    private = var.private_subnet_ids
+  }
+
   tg_health_check = {
     path    = "/status/200"
     matcher = "200-399"
@@ -8,14 +26,15 @@ locals {
 module "alb_public" {
   source = "terraform-aws-modules/alb/aws"
 
-  name     = "${var.name}-alb-public"
+  name     = local.lb_names.public
   vpc_id   = var.vpc_id
-  subnets  = var.public_subnet_ids
+  subnets  = local.subnets.public
   internal = false
 
+  # Because it´s a test project I don´t want to enable deletion protection by default
   enable_deletion_protection = false
   create_security_group      = true
-  security_group_name        = "${var.name}-alb-public-sg"
+  security_group_name        = local.lb_sg_names.public
 
   security_group_ingress_rules = {
     http_80_all = {
@@ -26,7 +45,6 @@ module "alb_public" {
       description = "HTTP from anywhere"
     }
   }
-  # Broad egress so there is no dependency on the app SG
   security_group_egress_rules = {
     all = { ip_protocol = "-1", cidr_ipv4 = "0.0.0.0/0" }
   }
@@ -47,7 +65,6 @@ module "alb_public" {
       port     = 80
       protocol = "HTTP"
 
-      # default 405
       fixed_response = {
         status_code  = "405"
         content_type = "text/plain"
@@ -73,14 +90,15 @@ module "alb_public" {
 module "alb_internal" {
   source = "terraform-aws-modules/alb/aws"
 
-  enable_deletion_protection = false
-  name                       = "${var.name}-alb-internal"
-  vpc_id                     = var.vpc_id
-  subnets                    = var.private_subnet_ids
-  internal                   = true
 
-  create_security_group = true
-  security_group_name   = "${var.name}-alb-internal-sg"
+  name     = local.lb_names.internal
+  vpc_id   = var.vpc_id
+  subnets  = local.subnets.private
+  internal = true
+
+  enable_deletion_protection = false
+  create_security_group      = true
+  security_group_name        = local.lb_sg_names.internal
 
   security_group_ingress_rules = {
     http_80_vpc = {
@@ -92,7 +110,7 @@ module "alb_internal" {
     }
   }
   security_group_egress_rules = {
-    all = { ip_protocol = "-1", cidr_ipv4 = var.vpc_cidr } # or 0.0.0.0/0
+    all = { ip_protocol = "-1", cidr_ipv4 = var.vpc_cidr }
   }
 
   target_groups = {
@@ -126,6 +144,14 @@ module "alb_internal" {
             { path_pattern = { values = ["/put*"] } }
           ]
         }
+        post_only = {
+          priority = 11
+          actions  = [{ type = "forward", target_group_key = "tg" }]
+          conditions = [
+            { http_request_method = { values = ["POST"] } },
+            { path_pattern = { values = ["/post*"] } }
+          ]
+        }
       }
     }
   }
@@ -136,15 +162,16 @@ module "alb_internal" {
 
 module "nlb_mgmt" {
   source                     = "terraform-aws-modules/alb/aws"
-  name                       = "${var.name}-nlb-mgmt"
+  name                       = local.lb_names.nlb_mgmt
   load_balancer_type         = "network"
   internal                   = false
   vpc_id                     = var.vpc_id
-  subnets                    = var.public_subnet_ids
+  subnets                    = local.subnets.public
   enable_deletion_protection = false
 
   create_security_group = true
-  security_group_name   = "${var.name}-nlb-sg"
+  security_group_name   = local.lb_sg_names.nlb_mgmt
+
   security_group_ingress_rules = {
     ssh = { from_port = 22, to_port = 22, ip_protocol = "tcp", cidr_ipv4 = var.admin_cidr }
     k8s = { from_port = 6443, to_port = 6443, ip_protocol = "tcp", cidr_ipv4 = var.admin_cidr }
@@ -176,7 +203,5 @@ module "nlb_mgmt" {
       create_attachment = false
     }
   }
-
-
   tags = var.tags
 }

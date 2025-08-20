@@ -25,21 +25,10 @@ variable "private_subnet_ids" {
 
 variable "host_port" {
   type        = number
-  description = "Port on targets (httpbin container port)"
+  description = "Port on targets for the ALB"
   default     = 80
 }
 
-variable "target_type" {
-  type        = string
-  description = "Target type for TGs (instance|ip|lambda)"
-  default     = "instance"
-}
-
-variable "target_instance_ids" {
-  type        = list(string)
-  description = "Optional instance IDs to register in both TGs"
-  default     = []
-}
 
 variable "tags" {
   type        = map(string)

@@ -4,18 +4,17 @@ locals {
   role_name        = "${var.name}-role"
   instance_profile = "${var.name}-profile"
 
-  create_ssm_role        = var.create_ssm_role
-  primary_private_subnet = var.private_subnet_ids[0]
+  create_ssm_role             = var.create_ssm_role
+  primary_private_subnet      = var.private_subnet_ids[0]
+  associate_public_ip_address = false
 
   tags = var.tags
-
 
   ssm_core_policy_arn  = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
   assume_role_services = ["ec2.amazonaws.com"]
 
   user_data_path = "${path.module}/templates/install-k3s.sh.tftpl"
 
-  associate_public_ip_address = false
   k3s_vars = {
     mode         = "server"
     tokens       = [var.cluster_token]

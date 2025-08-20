@@ -18,7 +18,7 @@ Repo rollouts everything in one go due to time restrictions.
 ### How to destroy
 
 #### phase 1: remove k8s things first
-`terraform destroy -target=module.k8s-httbin`
+`terraform destroy -target=module.k8s-httpbin`
 
 #### phase 2: destroy the rest
 `terraform destroy`
