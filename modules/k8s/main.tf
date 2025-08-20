@@ -6,7 +6,7 @@ locals {
 
 resource "kubernetes_namespace" "ns" {
   metadata {
-    name = var.namespace
+    name   = var.namespace
     labels = local.common_labels
   }
 }

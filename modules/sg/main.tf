@@ -2,10 +2,10 @@ locals {
   protocol = "tcp"
 
   ports = {
-    https    = 443
-    ssh      = 22
-    kube_api = 6443
-    httpbin_app  = var.httpbin_node_port
+    https       = 443
+    ssh         = 22
+    kube_api    = 6443
+    httpbin_app = var.httpbin_node_port
   }
 
   cidrs = {

@@ -1,6 +1,6 @@
 variable "kubeconfig_path" {
   description = "Kubeconfig path"
-  type       = string
+  type        = string
 }
 variable "namespace" {
   description = "Namespace for httpbin"

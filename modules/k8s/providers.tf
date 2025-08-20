@@ -1,5 +1,5 @@
 terraform {
-   required_version = ">= 1.12.0"
+  required_version = ">= 1.12.0"
   required_providers {
     kubernetes = {
       source  = "hashicorp/kubernetes"
@@ -9,5 +9,5 @@ terraform {
 }
 
 provider "kubernetes" {
-  config_path    = var.kubeconfig_path
+  config_path = var.kubeconfig_path
 }

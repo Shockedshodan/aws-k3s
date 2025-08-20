@@ -1,5 +1,5 @@
 module "vpc" {
-  source  = "terraform-aws-modules/vpc/aws"
+  source = "terraform-aws-modules/vpc/aws"
 
   name = var.vpc_name
   cidr = var.vpc_cidr
@@ -8,8 +8,8 @@ module "vpc" {
   private_subnets = var.private_subnets
   public_subnets  = var.public_subnets
 
-  enable_nat_gateway = var.enable_nat_gateway
-  single_nat_gateway = var.single_nat_gateway
+  enable_nat_gateway   = var.enable_nat_gateway
+  single_nat_gateway   = var.single_nat_gateway
   enable_dns_hostnames = var.enable_dns_hostnames
   enable_dns_support   = var.enable_dns_support
 
@@ -19,7 +19,7 @@ module "vpc" {
 }
 
 module "vpc_endpoints" {
-  source  = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
+  source = "terraform-aws-modules/vpc/aws//modules/vpc-endpoints"
 
   vpc_id             = module.vpc.vpc_id
   security_group_ids = [module.vpc.default_security_group_id]
@@ -39,5 +39,5 @@ module "vpc_endpoints" {
   create_security_group      = true
   security_group_name_prefix = "${var.vpc_name}-vpc-endpoints-"
   security_group_description = "VPC endpoint security group"
-  tags = var.tags
+  tags                       = var.tags
 }

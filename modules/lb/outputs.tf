@@ -41,7 +41,7 @@ output "ssh_tg_arn" {
 
 output "k8s_tg_arn" {
   value = module.nlb_mgmt.target_groups["k8s"].arn
-} 
+}
 
 output "nlb_mgmt_dns_name" {
   value = module.nlb_mgmt.dns_name

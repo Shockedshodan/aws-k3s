@@ -11,5 +11,5 @@ output "service_cluster_ip" {
 }
 
 output "service_node_port" {
-  value       = try(kubernetes_service.httpbin.spec[0].port[0].node_port, null)
+  value = try(kubernetes_service.httpbin.spec[0].port[0].node_port, null)
 }
