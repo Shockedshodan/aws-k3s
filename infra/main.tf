@@ -1,4 +1,33 @@
 locals {
+  vpc_name = "${var.name}-vpc"
+  lb_name  = "${var.name}-alb"
+  ec2_name = "${var.name}-ec2"
+
+  common_tags = merge(
+    {
+      Project   = var.project
+      Terraform = "true"
+    },
+    var.tags_extra
+  )
+
+  # Ugh
+  admin_cidrs = var.admin_cidrs
+  admin_cidr  = element(var.admin_cidrs, 0)
+
+  vpc_cidr = "10.0.0.0/16"
+
+
+  ami_id = "ami-01102c5e8ab69fb75"
+  # t3.micro struggled with 1g of ram eaten right after deployment.
+  # Can turn off traefik and rest of the stuff but meh. Beyond the scope
+  instance_type = "t3.small"
+
+  k3s_labels = {
+    app_name = "httpbin"
+    env      = "test"
+  }
+
   kubeconfig_raw = base64decode(replace(data.external.kubeconfig.result.kubeconfig, " ", ""))
   kubeconfig_yaml_replaced_host = replace(
     local.kubeconfig_raw,
@@ -9,8 +38,8 @@ locals {
 }
 
 
-
-
+# S3 state being commented since we don't need it in test env, but having an option to enable it later is good, eh?
+# Look, dynamodb, versioning, encrypted. Noice.
 # module "s3_state" {
 #   source = "../modules/s3-state"
 
@@ -29,8 +58,8 @@ resource "aws_key_pair" "ssh_key" {
 module "vpc" {
   source = "../modules/vpc"
 
-  vpc_name = "epta-k3s-vpc"
-  vpc_cidr = "10.0.0.0/16"
+  vpc_name = local.vpc_name
+  vpc_cidr = local.vpc_cidr
 
   azs             = ["us-west-2a", "us-west-2b"]
   public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
@@ -42,29 +71,26 @@ module "vpc" {
   enable_dns_support      = true
   map_public_ip_on_launch = false
 
-  tags = {
-    Project   = "epta-httpbin-test"
-    Terraform = "true"
-  }
+  tags = local.common_tags
 }
 
 
 module "lb" {
   source = "../modules/lb"
 
-  name               = "epta-k3s-alb"
+  name               = local.lb_name
   vpc_id             = module.vpc.vpc_id
-  vpc_cidr           = "10.0.0.0/16"
+  vpc_cidr           = local.vpc_cidr
   public_subnet_ids  = module.vpc.public_subnets
   private_subnet_ids = module.vpc.private_subnets
 
+
+
   host_port = 80
 
-  tags = {
-    Project   = "epta-httpbin-test"
-    Terraform = "true"
-  }
-  admin_cidr = "77.165.233.0/24"
+  tags = local.common_tags
+
+  admin_cidr = local.admin_cidr
 
 }
 
@@ -72,23 +98,20 @@ module "ec2" {
   source = "../modules/ec2"
 
   vpc_id             = module.vpc.vpc_id
-  vpc_cidr           = "10.0.0.0/16"
-  name               = "epta-k3s-ec2"
-  ami_id             = "ami-01102c5e8ab69fb75"
-  instance_type      = "t3.small"
+  vpc_cidr           = local.vpc_cidr
+  name               = local.ec2_name
+  ami_id             = local.ami_id
+  instance_type      = local.instance_type
   private_subnet_ids = module.vpc.private_subnets
   key_name           = aws_key_pair.ssh_key.key_name
   create_ssm_role    = true
-  cluster_token      = "epta-k3s"
+  cluster_token      = var.cluster_token
 
   # Hardcoded, not flexible
   nlb_mgmt_dns_name = module.lb.nlb_mgmt_dns_name
 
 
-  tags = {
-    Project   = "epta-httpbin-test"
-    Terraform = "true"
-  }
+  tags = local.common_tags
 
 }
 
@@ -107,7 +130,7 @@ module "sg" {
   ssh_tg_arn      = module.lb.ssh_tg_arn
   k8s_tg_arn      = module.lb.k8s_tg_arn
 
-  admin_cidrs = ["77.165.233.0/24"]
+  admin_cidrs = local.admin_cidrs
 
 }
 
@@ -138,9 +161,5 @@ module "k8s-httpbin" {
   service_type    = "NodePort"
   node_port       = 30080
   container_port  = 80
-  labels = {
-    app = "httpbin"
-    env = "test"
-  }
-
+  labels          = local.k3s_labels
 }
